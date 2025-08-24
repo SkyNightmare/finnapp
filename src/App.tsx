@@ -140,11 +140,11 @@ function App() {
         )}
 
         {activeTab === 'budget' && (
-          <BudgetTracker transactions={transactions} />
+          <BudgetTracker transactions={monthFilteredTransactions} />
         )}
 
         {activeTab === 'goals' && (
-          <GoalTracker />
+          <GoalTracker transactions={monthFilteredTransactions} />
         )}
 
         {/* Footer */}

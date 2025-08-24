@@ -38,4 +38,5 @@ export interface Goal {
   currentAmount: number;
   targetDate: Date;
   category: string;
+  trackIncome?: boolean;
 }
