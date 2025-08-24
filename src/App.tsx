@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Wallet, BarChart3, Target, Trophy } from 'lucide-react';
+import { Wallet, BarChart3, User, LogOut } from 'lucide-react';
 import { Transaction } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { filterTransactionsByMonth } from './utils/dataUtils';
@@ -8,16 +8,15 @@ import { TransactionList } from './components/TransactionList';
 import { Summary } from './components/Summary';
 import { Charts } from './components/Charts';
 import { Filters } from './components/Filters';
-import { BudgetTracker } from './components/BudgetTracker';
-import { GoalTracker } from './components/GoalTracker';
 import { SearchAndFilter } from './components/SearchAndFilter';
 import { QuickStats } from './components/QuickStats';
+import { AuthForm } from './components/AuthForm';
 
 function App() {
+  const [user, setUser] = useLocalStorage<{ id: string; email: string; name: string } | null>('finance-user', null);
   const [transactions, setTransactions] = useLocalStorage<Transaction[]>('finance-transactions', []);
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
-  const [activeTab, setActiveTab] = useState<'overview' | 'budget' | 'goals'>('overview');
 
   const monthFilteredTransactions = useMemo(() => {
     return filterTransactionsByMonth(transactions, selectedMonth);
@@ -40,6 +39,39 @@ function App() {
   const handleFilteredTransactions = (filtered: Transaction[]) => {
     setFilteredTransactions(filtered);
   };
+
+  const handleLogin = (userData: { id: string; email: string; name: string }) => {
+    setUser(userData);
+    // Load user's transactions from localStorage with user-specific key
+    const userTransactions = localStorage.getItem(`finance-transactions-${userData.id}`);
+    if (userTransactions) {
+      setTransactions(JSON.parse(userTransactions));
+    } else {
+      setTransactions([]);
+    }
+  };
+
+  const handleLogout = () => {
+    // Save current transactions to user-specific storage before logout
+    if (user) {
+      localStorage.setItem(`finance-transactions-${user.id}`, JSON.stringify(transactions));
+    }
+    setUser(null);
+    setTransactions([]);
+  };
+
+  // Save transactions to user-specific storage whenever transactions change
+  React.useEffect(() => {
+    if (user && transactions.length >= 0) {
+      localStorage.setItem(`finance-transactions-${user.id}`, JSON.stringify(transactions));
+    }
+  }, [transactions, user]);
+
+  // Show auth form if user is not logged in
+  if (!user) {
+    return <AuthForm onLogin={handleLogin} />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header */}
@@ -56,12 +88,29 @@ function App() {
               </div>
             </div>
             
-            <div className="flex items-center gap-3 bg-gradient-to-r from-gray-50 to-blue-50 px-4 py-2 rounded-xl shadow-lg border border-gray-100">
-              <BarChart3 className="w-5 h-5 text-blue-600" />
-              <span className="hidden sm:inline">
-                <span className="font-bold text-gray-800">{transactions.length}</span>
-                <span className="text-gray-600 ml-1">transactions</span>
-              </span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 bg-gradient-to-r from-gray-50 to-blue-50 px-4 py-2 rounded-xl shadow-lg border border-gray-100">
+                <BarChart3 className="w-5 h-5 text-blue-600" />
+                <span className="hidden sm:inline">
+                  <span className="font-bold text-gray-800">{transactions.length}</span>
+                  <span className="text-gray-600 ml-1">transactions</span>
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-3 bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-2 rounded-xl shadow-lg border border-green-100">
+                <User className="w-5 h-5 text-green-600" />
+                <span className="hidden sm:inline">
+                  <span className="font-medium text-green-800">{user.name}</span>
+                </span>
+              </div>
+              
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-50 to-pink-50 text-red-700 rounded-xl hover:from-red-100 hover:to-pink-100 transition-all duration-300 shadow-lg font-medium"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
             </div>
           </div>
         </div>
@@ -69,72 +118,59 @@ function App() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Navigation Tabs */}
-        <div className="flex justify-center mb-8">
-          <div className="bg-gradient-to-r from-white via-gray-50 to-white rounded-2xl shadow-2xl border border-gray-100 p-2 backdrop-blur-sm">
-            <div className="flex gap-2">
-              {[
-                { id: 'overview', label: 'Overview', icon: BarChart3 },
-                { id: 'budget', label: 'Budget', icon: Target },
-                { id: 'goals', label: 'Goals', icon: Trophy }
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
-                    activeTab === tab.id
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-xl transform scale-105'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
-                  }`}
-                >
-                  <tab.icon className="w-4 h-4" />
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+        {/* Quick Stats */}
+        <QuickStats transactions={monthFilteredTransactions} />
+
+        {/* Summary Cards */}
+        <Summary transactions={monthFilteredTransactions} />
+
+        {/* Search and Filter */}
+        <SearchAndFilter 
+          transactions={monthFilteredTransactions}
+          onFilteredTransactions={handleFilteredTransactions}
+        />
+
+        {/* Filters */}
+        <Filters 
+          transactions={transactions}
+          selectedMonth={selectedMonth}
+          onMonthChange={handleMonthChange}
+        />
+
+        {/* Charts */}
+        <div className="mb-8">
+          <Charts transactions={displayTransactions} />
+        </div>
+
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Transaction Form */}
+          <div className="lg:col-span-1">
+            <TransactionForm onAddTransaction={handleAddTransaction} />
+          </div>
+
+          {/* Transaction List */}
+          <div className="lg:col-span-2">
+            <TransactionList
+              transactions={displayTransactions}
+              onDeleteTransaction={handleDeleteTransaction}
+            />
           </div>
         </div>
 
-        {activeTab === 'overview' && (
-          <>
-            {/* Quick Stats */}
-            <QuickStats transactions={monthFilteredTransactions} />
+        {/* Footer */}
+        <div className="mt-12 pt-8 border-t border-gray-200">
+          <div className="text-center text-gray-500 text-sm">
+            <p>Your data is stored locally in your browser and associated with your account.</p>
+            <p className="mt-2">Professional Finance Tracker • Built with React & TypeScript</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-            {/* Summary Cards */}
-            <Summary transactions={monthFilteredTransactions} />
-
-            {/* Search and Filter */}
-            <SearchAndFilter 
-              transactions={monthFilteredTransactions}
-              onFilteredTransactions={handleFilteredTransactions}
-            />
-
-            {/* Filters */}
-            <Filters 
-              transactions={transactions}
-              selectedMonth={selectedMonth}
-              onMonthChange={handleMonthChange}
-            />
-
-            {/* Charts */}
-            <div className="mb-8">
-              <Charts transactions={displayTransactions} />
-            </div>
-
-            {/* Main Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Transaction Form */}
-              <div className="lg:col-span-1">
-                <TransactionForm onAddTransaction={handleAddTransaction} />
-              </div>
-
-              {/* Transaction List */}
-              <div className="lg:col-span-2">
-                <TransactionList
-                  transactions={displayTransactions}
-                  onDeleteTransaction={handleDeleteTransaction}
-                />
-              </div>
+export default App;
             </div>
           </>
         )}
