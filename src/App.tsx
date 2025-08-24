@@ -8,6 +8,8 @@ import { TransactionList } from './components/TransactionList';
 import { Summary } from './components/Summary';
 import { Charts } from './components/Charts';
 import { Filters } from './components/Filters';
+import { BudgetTracker } from './components/BudgetTracker';
+import { GoalTracker } from './components/GoalTracker';
 import { SearchAndFilter } from './components/SearchAndFilter';
 import { QuickStats } from './components/QuickStats';
 
@@ -138,11 +140,11 @@ function App() {
         )}
 
         {activeTab === 'budget' && (
-          <BudgetTracker transactions={transactions} />
+          <BudgetTracker transactions={monthFilteredTransactions} />
         )}
 
         {activeTab === 'goals' && (
-          <GoalTracker />
+          <GoalTracker transactions={monthFilteredTransactions} />
         )}
 
         {/* Footer */}
