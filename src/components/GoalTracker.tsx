@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Trophy, Plus, Calendar, DollarSign, TrendingUp, ArrowRight } from 'lucide-react';
+import { Trophy, Plus, Calendar, DollarSign, TrendingUp, ArrowRight, Edit3 } from 'lucide-react';
 import { Goal, Transaction } from '../types';
 import { formatCurrency } from '../utils/dataUtils';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -12,6 +12,8 @@ interface GoalTrackerProps {
 export function GoalTracker({ transactions }: GoalTrackerProps) {
   const [goals, setGoals] = useLocalStorage<Goal[]>('finance-goals', []);
   const [showForm, setShowForm] = useState(false);
+  const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
+  const [showCustomInput, setShowCustomInput] = useState<Record<string, boolean>>({});
   const [formData, setFormData] = useState({
     name: '',
     targetAmount: '',
@@ -61,10 +63,12 @@ export function GoalTracker({ transactions }: GoalTrackerProps) {
     }
 
     // Calculate automatic progress from income transactions in this category
+    // Convert goal.id to timestamp for proper date comparison
+    const goalCreationDate = new Date(parseInt(goal.id));
     const relevantTransactions = transactions.filter(t => 
       t.type === 'income' && 
       t.category.toLowerCase() === goal.category.toLowerCase() &&
-      new Date(t.date) >= new Date(goal.id) // Only count transactions after goal creation
+      new Date(t.date) >= goalCreationDate
     );
 
     const autoProgress = relevantTransactions.reduce((sum, t) => sum + t.amount, 0);
@@ -79,6 +83,14 @@ export function GoalTracker({ transactions }: GoalTrackerProps) {
     ));
   };
 
+  const handleCustomAmountSubmit = (goalId: string) => {
+    const amount = parseFloat(customAmounts[goalId] || '0');
+    if (!isNaN(amount) && amount !== 0) {
+      updateGoalProgress(goalId, amount);
+      setCustomAmounts(prev => ({ ...prev, [goalId]: '' }));
+      setShowCustomInput(prev => ({ ...prev, [goalId]: false }));
+    }
+  };
   const deleteGoal = (id: string) => {
     setGoals(prev => prev.filter(g => g.id !== id));
   };
@@ -350,16 +362,37 @@ export function GoalTracker({ transactions }: GoalTrackerProps) {
                         +$50
                       </button>
                       <button
-                        onClick={() => updateGoalProgress(goal.id, 100)}
-                        className="flex-1 px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-all duration-300 text-sm font-medium"
-                      >
-                        +$100
-                      </button>
-                      <button
                         onClick={() => updateGoalProgress(goal.id, -50)}
                         className="flex-1 px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-all duration-300 text-sm font-medium"
                       >
                         -$50
+                      </button>
+                      <button
+                        onClick={() => setShowCustomInput(prev => ({ ...prev, [goal.id]: !prev[goal.id] }))}
+                        className="flex-1 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all duration-300 text-sm font-medium flex items-center justify-center gap-1"
+                      >
+                        <Edit3 className="w-3 h-3" />
+                        Custom
+                      </button>
+                    </div>
+                  )}
+                  
+                  {!isCompleted && showCustomInput[goal.id] && (
+                    <div className="mt-3 flex gap-2">
+                      <input
+                        type="number"
+                        step="0.01"
+                        placeholder="Enter amount (+/-)"
+                        value={customAmounts[goal.id] || ''}
+                        onChange={(e) => setCustomAmounts(prev => ({ ...prev, [goal.id]: e.target.value }))}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        onKeyPress={(e) => e.key === 'Enter' && handleCustomAmountSubmit(goal.id)}
+                      />
+                      <button
+                        onClick={() => handleCustomAmountSubmit(goal.id)}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-300 text-sm font-medium"
+                      >
+                        Add
                       </button>
                     </div>
                   )}

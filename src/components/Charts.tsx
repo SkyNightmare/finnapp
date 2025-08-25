@@ -8,8 +8,10 @@ import {
   Tooltip,
   Legend,
   ArcElement,
+  LineElement,
+  PointElement,
 } from 'chart.js';
-import { Bar, Doughnut } from 'react-chartjs-2';
+import { Bar, Doughnut, Line, Pie } from 'react-chartjs-2';
 import { Transaction, CategorySummary, MonthlyData } from '../types';
 import { getCategorySummary, getMonthlyData, formatCurrency } from '../utils/dataUtils';
 
@@ -20,7 +22,9 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  ArcElement
+  ArcElement,
+  LineElement,
+  PointElement
 );
 
 interface ChartsProps {
@@ -33,6 +37,9 @@ const colors = [
 ];
 
 export function Charts({ transactions }: ChartsProps) {
+  const [monthlyChartType, setMonthlyChartType] = React.useState<'bar' | 'line'>('bar');
+  const [expenseChartType, setExpenseChartType] = React.useState<'doughnut' | 'pie'>('doughnut');
+  
   const monthlyData = getMonthlyData(transactions);
   const expenseCategories = getCategorySummary(transactions, 'expense');
   const incomeCategories = getCategorySummary(transactions, 'income');
@@ -46,6 +53,7 @@ export function Charts({ transactions }: ChartsProps) {
         backgroundColor: '#10B981',
         borderColor: '#059669',
         borderWidth: 1,
+        fill: false,
       },
       {
         label: 'Expenses',
@@ -53,6 +61,7 @@ export function Charts({ transactions }: ChartsProps) {
         backgroundColor: '#EF4444',
         borderColor: '#DC2626',
         borderWidth: 1,
+        fill: false,
       },
     ],
   };
@@ -124,20 +133,81 @@ export function Charts({ transactions }: ChartsProps) {
     );
   }
 
+  const renderMonthlyChart = () => {
+    if (monthlyChartType === 'line') {
+      return <Line data={monthlyChartData} options={chartOptions} />;
+    }
+    return <Bar data={monthlyChartData} options={chartOptions} />;
+  };
+
+  const renderExpenseChart = () => {
+    if (expenseChartType === 'pie') {
+      return <Pie data={expensePieData} options={pieOptions} />;
+    }
+    return <Doughnut data={expensePieData} options={pieOptions} />;
+  };
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       <div className="bg-gradient-to-br from-white via-gray-50 to-white rounded-2xl shadow-2xl border border-gray-100 p-8 backdrop-blur-sm">
-        <h3 className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-6">Monthly Overview</h3>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">Monthly Overview</h3>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setMonthlyChartType('bar')}
+              className={`px-3 py-1 text-xs font-medium rounded-lg transition-all duration-300 ${
+                monthlyChartType === 'bar'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Bar
+            </button>
+            <button
+              onClick={() => setMonthlyChartType('line')}
+              className={`px-3 py-1 text-xs font-medium rounded-lg transition-all duration-300 ${
+                monthlyChartType === 'line'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Line
+            </button>
+          </div>
+        </div>
         <div className="h-80">
-          <Bar data={monthlyChartData} options={chartOptions} />
+          {renderMonthlyChart()}
         </div>
       </div>
       
       {expenseCategories.length > 0 && (
         <div className="bg-gradient-to-br from-white via-gray-50 to-white rounded-2xl shadow-2xl border border-gray-100 p-8 backdrop-blur-sm">
-          <h3 className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-6">Expense Breakdown</h3>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">Expense Breakdown</h3>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setExpenseChartType('doughnut')}
+                className={`px-3 py-1 text-xs font-medium rounded-lg transition-all duration-300 ${
+                  expenseChartType === 'doughnut'
+                    ? 'bg-purple-500 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Doughnut
+              </button>
+              <button
+                onClick={() => setExpenseChartType('pie')}
+                className={`px-3 py-1 text-xs font-medium rounded-lg transition-all duration-300 ${
+                  expenseChartType === 'pie'
+                    ? 'bg-purple-500 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Pie
+              </button>
+            </div>
+          </div>
           <div className="h-80">
-            <Doughnut data={expensePieData} options={pieOptions} />
+            {renderExpenseChart()}
           </div>
         </div>
       )}

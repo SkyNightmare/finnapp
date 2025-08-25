@@ -164,13 +164,17 @@ export function BudgetTracker({ transactions }: BudgetTrackerProps) {
                 </div>
                 
                 {formData.category === 'custom' && (
-                  <input
-                    type="text"
-                    placeholder="Enter category name"
-                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                    className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-300 bg-white shadow-inner font-medium"
-                    required
-                  />
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Custom Category Name</label>
+                    <input
+                      type="text"
+                      placeholder="Enter category name"
+                      value={formData.category === 'custom' ? '' : formData.category}
+                      onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-300 bg-white shadow-inner font-medium"
+                      required
+                    />
+                  </div>
                 )}
                 
                 <input
