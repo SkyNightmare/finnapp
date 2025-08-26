@@ -1,24 +1,29 @@
 import React, { useState, useMemo } from 'react';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, Loader2 } from 'lucide-react';
 import { Transaction } from './types';
-import { useLocalStorage } from './hooks/useLocalStorage';
 import { filterTransactionsByMonth } from './utils/dataUtils';
+import { useAuth } from './hooks/useAuth';
+import { useTransactions } from './hooks/useTransactions';
+import { useGoals } from './hooks/useGoals';
+import { AuthModal } from './components/AuthModal';
 import { TransactionModal } from './components/TransactionModal';
 import { TransactionList } from './components/TransactionList';
 import { Summary } from './components/Summary';
 import { Charts } from './components/Charts';
-import { Filters } from './components/Filters';
 import { BudgetTracker } from './components/BudgetTracker';
 import { GoalTracker } from './components/GoalTracker';
 import { SearchAndFilter } from './components/SearchAndFilter';
 import { QuickStats } from './components/QuickStats';
 import { Sidebar } from './components/Sidebar';
 function App() {
-  const [transactions, setTransactions] = useLocalStorage<Transaction[]>('finance-transactions', []);
+  const { user, loading: authLoading } = useAuth();
+  const { transactions, loading: transactionsLoading, addTransaction, deleteTransaction } = useTransactions();
+  const { goals, addGoal, updateGoal, deleteGoal } = useGoals();
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [activeTab, setActiveTab] = useState<'overview' | 'goals'>('overview');
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   const monthFilteredTransactions = useMemo(() => {
     return filterTransactionsByMonth(transactions, selectedMonth);
@@ -26,12 +31,21 @@ function App() {
 
   const displayTransactions = filteredTransactions.length > 0 ? filteredTransactions : monthFilteredTransactions;
 
-  const handleAddTransaction = (transaction: Transaction) => {
-    setTransactions(prev => [...prev, transaction]);
+  const handleAddTransaction = async (transactionData: Omit<Transaction, 'id'>) => {
+    try {
+      await addTransaction(transactionData);
+      setIsTransactionModalOpen(false);
+    } catch (error) {
+      console.error('Failed to add transaction:', error);
+    }
   };
 
-  const handleDeleteTransaction = (id: string) => {
-    setTransactions(prev => prev.filter(t => t.id !== id));
+  const handleDeleteTransaction = async (id: string) => {
+    try {
+      await deleteTransaction(id);
+    } catch (error) {
+      console.error('Failed to delete transaction:', error);
+    }
   };
 
   const handleMonthChange = (month: string) => {
@@ -42,13 +56,29 @@ function App() {
     setFilteredTransactions(filtered);
   };
 
+  const handleAuthSuccess = () => {
+    // Auth success is handled by the useAuth hook
+  };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Loading your financial data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex">
       {/* Sidebar */}
       <Sidebar 
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        onAddTransaction={() => setIsTransactionModalOpen(true)}
+        onAddTransaction={() => user ? setIsTransactionModalOpen(true) : setIsAuthModalOpen(true)}
+        onShowAuth={() => setIsAuthModalOpen(true)}
       />
 
       {/* Main Content */}
@@ -75,7 +105,23 @@ function App() {
           </div>
         </div>
 
-        {activeTab === 'overview' && (
+        {!user ? (
+          <div className="text-center py-20">
+            <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl">
+              <BarChart3 className="w-12 h-12 text-white" />
+            </div>
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">Welcome to Finance Tracker</h2>
+            <p className="text-gray-600 text-lg mb-8 max-w-md mx-auto">
+              Sign in or create an account to start tracking your finances and achieve your financial goals.
+            </p>
+            <button
+              onClick={() => setIsAuthModalOpen(true)}
+              className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white py-4 px-8 rounded-xl hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 focus:ring-4 focus:ring-blue-200 transition-all duration-300 font-bold text-lg shadow-xl transform hover:scale-105 active:scale-95"
+            >
+              Get Started
+            </button>
+          </div>
+        ) : activeTab === 'overview' ? (
           <>
             {/* Quick Stats */}
             <QuickStats transactions={monthFilteredTransactions} />
@@ -107,19 +153,32 @@ function App() {
               onDeleteTransaction={handleDeleteTransaction}
             />
           </>
-        )}
-
-        {activeTab === 'goals' && (
-          <GoalTracker transactions={monthFilteredTransactions} />
+        ) : (
+          <GoalTracker 
+            transactions={monthFilteredTransactions}
+            goals={goals}
+            onAddGoal={addGoal}
+            onUpdateGoal={updateGoal}
+            onDeleteGoal={deleteGoal}
+          />
         )}
       </div>
 
-      {/* Transaction Modal */}
-      <TransactionModal
-        isOpen={isTransactionModalOpen}
-        onClose={() => setIsTransactionModalOpen(false)}
-        onAddTransaction={handleAddTransaction}
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onAuthSuccess={handleAuthSuccess}
       />
+
+      {/* Transaction Modal */}
+      {user && (
+        <TransactionModal
+          isOpen={isTransactionModalOpen}
+          onClose={() => setIsTransactionModalOpen(false)}
+          onAddTransaction={handleAddTransaction}
+        />
+      )}
     </div>
   );
 }

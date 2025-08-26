@@ -1,17 +1,25 @@
 import React from 'react';
-import { BarChart3, Trophy, Plus } from 'lucide-react';
+import { BarChart3, Trophy, Plus, LogOut, User } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 
 interface SidebarProps {
   activeTab: 'overview' | 'goals';
   onTabChange: (tab: 'overview' | 'goals') => void;
   onAddTransaction: () => void;
+  onShowAuth: () => void;
 }
 
-export function Sidebar({ activeTab, onTabChange, onAddTransaction }: SidebarProps) {
+export function Sidebar({ activeTab, onTabChange, onAddTransaction, onShowAuth }: SidebarProps) {
+  const { user, signOut } = useAuth();
+
   const menuItems = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'goals', label: 'Goals', icon: Trophy }
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
     <div className="w-64 bg-gradient-to-b from-white via-gray-50 to-white shadow-2xl border-r border-gray-100 h-screen fixed left-0 top-0 z-40 backdrop-blur-sm">
@@ -28,13 +36,23 @@ export function Sidebar({ activeTab, onTabChange, onAddTransaction }: SidebarPro
       </div>
 
       <div className="p-4">
-        <button
-          onClick={onAddTransaction}
-          className="w-full flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 focus:ring-4 focus:ring-blue-200 transition-all duration-300 font-bold shadow-xl transform hover:scale-105 active:scale-95 mb-6"
-        >
-          <Plus className="w-5 h-5" />
-          Add Transaction
-        </button>
+        {user ? (
+          <button
+            onClick={onAddTransaction}
+            className="w-full flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 focus:ring-4 focus:ring-blue-200 transition-all duration-300 font-bold shadow-xl transform hover:scale-105 active:scale-95 mb-6"
+          >
+            <Plus className="w-5 h-5" />
+            Add Transaction
+          </button>
+        ) : (
+          <button
+            onClick={onShowAuth}
+            className="w-full flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 text-white rounded-xl hover:from-green-700 hover:via-emerald-700 hover:to-teal-700 focus:ring-4 focus:ring-green-200 transition-all duration-300 font-bold shadow-xl transform hover:scale-105 active:scale-95 mb-6"
+          >
+            <User className="w-5 h-5" />
+            Sign In / Register
+          </button>
+        )}
 
         <nav className="space-y-2">
           {menuItems.map(item => (
@@ -55,8 +73,27 @@ export function Sidebar({ activeTab, onTabChange, onAddTransaction }: SidebarPro
       </div>
 
       <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100">
+        {user && (
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <User className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-gray-800 truncate">{user.email}</p>
+              </div>
+            </div>
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center gap-2 px-3 py-2 text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-lg transition-all duration-300 text-sm font-medium"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </button>
+          </div>
+        )}
         <div className="text-center text-gray-500 text-xs">
-          <p>Data stored locally</p>
+          <p>{user ? 'Data synced to cloud' : 'Sign in to sync data'}</p>
           <p className="mt-1">Built with React & TypeScript</p>
         </div>
       </div>

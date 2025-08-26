@@ -7,7 +7,7 @@ import { Modal } from './Modal';
 interface TransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddTransaction: (transaction: Transaction) => void;
+  onAddTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<void>;
 }
 
 const commonCategories = {
@@ -34,8 +34,7 @@ export function TransactionModal({ isOpen, onClose, onAddTransaction }: Transact
     const category = formData.category === 'custom' ? formData.customCategory : formData.category;
     if (!category.trim()) return;
 
-    const transaction: Transaction = {
-      id: generateId(),
+    const transaction: Omit<Transaction, 'id'> = {
       amount,
       category: category.trim(),
       type: formData.type,
@@ -43,7 +42,7 @@ export function TransactionModal({ isOpen, onClose, onAddTransaction }: Transact
       date: new Date(formData.date)
     };
 
-    onAddTransaction(transaction);
+    await onAddTransaction(transaction);
     setFormData({
       amount: '',
       category: '',
@@ -52,7 +51,6 @@ export function TransactionModal({ isOpen, onClose, onAddTransaction }: Transact
       description: '',
       date: new Date().toISOString().split('T')[0]
     });
-    onClose();
   };
 
   return (
