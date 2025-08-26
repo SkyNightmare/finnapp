@@ -2,17 +2,15 @@ import React, { useState } from 'react';
 import { Trophy, Plus, Calendar, DollarSign, TrendingUp, ArrowRight, Edit3 } from 'lucide-react';
 import { Goal, Transaction } from '../types';
 import { formatCurrency } from '../utils/dataUtils';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 import { format, differenceInDays } from 'date-fns';
 
 interface GoalTrackerProps {
   transactions: Transaction[];
-  goals: Goal[];
-  onAddGoal: (goal: Omit<Goal, 'id'>) => Promise<void>;
-  onUpdateGoal: (id: string, updates: Partial<Goal>) => Promise<void>;
-  onDeleteGoal: (id: string) => Promise<void>;
 }
 
-export function GoalTracker({ transactions, goals, onAddGoal, onUpdateGoal, onDeleteGoal }: GoalTrackerProps) {
+export function GoalTracker({ transactions }: GoalTrackerProps) {
+  const [goals, setGoals] = useLocalStorage<Goal[]>('finance-goals', []);
   const [showForm, setShowForm] = useState(false);
   const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
   const [showCustomInput, setShowCustomInput] = useState<Record<string, boolean>>({});
@@ -37,7 +35,8 @@ export function GoalTracker({ transactions, goals, onAddGoal, onUpdateGoal, onDe
     
     if (isNaN(targetAmount) || targetAmount <= 0 || !formData.name.trim()) return;
 
-    const newGoal: Omit<Goal, 'id'> = {
+    const newGoal: Goal = {
+      id: Date.now().toString(),
       name: formData.name.trim(),
       targetAmount,
       currentAmount,
@@ -46,7 +45,7 @@ export function GoalTracker({ transactions, goals, onAddGoal, onUpdateGoal, onDe
       trackIncome: formData.trackIncome
     };
 
-    onAddGoal(newGoal);
+    setGoals(prev => [...prev, newGoal]);
     setFormData({ 
       name: '', 
       targetAmount: '', 
@@ -77,11 +76,11 @@ export function GoalTracker({ transactions, goals, onAddGoal, onUpdateGoal, onDe
   };
 
   const updateGoalProgress = (goalId: string, amount: number) => {
-    const goal = goals.find(g => g.id === goalId);
-    if (goal) {
-      const newAmount = Math.max(0, goal.currentAmount + amount);
-      onUpdateGoal(goalId, { currentAmount: newAmount });
-    }
+    setGoals(prev => prev.map(goal => 
+      goal.id === goalId 
+        ? { ...goal, currentAmount: Math.max(0, goal.currentAmount + amount) }
+        : goal
+    ));
   };
 
   const handleCustomAmountSubmit = (goalId: string) => {
@@ -91,6 +90,9 @@ export function GoalTracker({ transactions, goals, onAddGoal, onUpdateGoal, onDe
       setCustomAmounts(prev => ({ ...prev, [goalId]: '' }));
       setShowCustomInput(prev => ({ ...prev, [goalId]: false }));
     }
+  };
+  const deleteGoal = (id: string) => {
+    setGoals(prev => prev.filter(g => g.id !== id));
   };
 
   return (
@@ -288,7 +290,7 @@ export function GoalTracker({ transactions, goals, onAddGoal, onUpdateGoal, onDe
                       </div>
                     </div>
                     <button
-                      onClick={() => onDeleteGoal(goal.id)}
+                      onClick={() => deleteGoal(goal.id)}
                       className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-300"
                     >
                       ×

@@ -39,11 +39,4 @@ export interface Goal {
   targetDate: Date;
   category: string;
   trackIncome?: boolean;
-  userId?: string;
-}
-
-export interface User {
-  id: string;
-  email: string;
-  created_at: string;
 }
