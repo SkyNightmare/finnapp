@@ -1,16 +1,15 @@
 import React from 'react';
-import { BarChart3, Target, Trophy, Plus } from 'lucide-react';
+import { BarChart3, Trophy, Plus } from 'lucide-react';
 
 interface SidebarProps {
-  activeTab: 'overview' | 'budget' | 'goals';
-  onTabChange: (tab: 'overview' | 'budget' | 'goals') => void;
+  activeTab: 'overview' | 'goals';
+  onTabChange: (tab: 'overview' | 'goals') => void;
   onAddTransaction: () => void;
 }
 
 export function Sidebar({ activeTab, onTabChange, onAddTransaction }: SidebarProps) {
   const menuItems = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
-    { id: 'budget', label: 'Budget', icon: Target },
     { id: 'goals', label: 'Goals', icon: Trophy }
   ];
 

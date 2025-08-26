@@ -13,12 +13,11 @@ import { GoalTracker } from './components/GoalTracker';
 import { SearchAndFilter } from './components/SearchAndFilter';
 import { QuickStats } from './components/QuickStats';
 import { Sidebar } from './components/Sidebar';
-
 function App() {
   const [transactions, setTransactions] = useLocalStorage<Transaction[]>('finance-transactions', []);
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
-  const [activeTab, setActiveTab] = useState<'overview' | 'budget' | 'goals'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'goals'>('overview');
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
 
   const monthFilteredTransactions = useMemo(() => {
@@ -59,14 +58,10 @@ function App() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-black bg-gradient-to-r from-gray-800 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-                {activeTab === 'overview' ? 'Financial Overview' : 
-                 activeTab === 'budget' ? 'Budget Management' : 
-                 'Savings Goals'}
+                {activeTab === 'overview' ? 'Financial Overview' : 'Savings Goals'}
               </h1>
               <p className="text-sm font-medium text-gray-600 mt-1">
-                {activeTab === 'overview' ? 'Track your income and expenses' : 
-                 activeTab === 'budget' ? 'Monitor your spending limits' : 
-                 'Achieve your financial objectives'}
+                {activeTab === 'overview' ? 'Track your income and expenses' : 'Achieve your financial objectives'}
               </p>
             </div>
             
@@ -112,10 +107,6 @@ function App() {
               onDeleteTransaction={handleDeleteTransaction}
             />
           </>
-        )}
-
-        {activeTab === 'budget' && (
-          <BudgetTracker transactions={monthFilteredTransactions} />
         )}
 
         {activeTab === 'goals' && (
