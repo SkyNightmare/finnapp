@@ -10,8 +10,9 @@ import {
   ArcElement,
   LineElement,
   PointElement,
+  RadialLinearScale,
 } from 'chart.js';
-import { Bar, Doughnut, Line, Pie } from 'react-chartjs-2';
+import { Bar, Doughnut, Line, Pie, PolarArea, Radar } from 'react-chartjs-2';
 import { Transaction, CategorySummary, MonthlyData } from '../types';
 import { getCategorySummary, getMonthlyData, formatCurrency } from '../utils/dataUtils';
 
@@ -24,7 +25,8 @@ ChartJS.register(
   Legend,
   ArcElement,
   LineElement,
-  PointElement
+  PointElement,
+  RadialLinearScale
 );
 
 interface ChartsProps {
@@ -38,7 +40,7 @@ const colors = [
 
 export function Charts({ transactions }: ChartsProps) {
   const [monthlyChartType, setMonthlyChartType] = React.useState<'bar' | 'line'>('bar');
-  const [expenseChartType, setExpenseChartType] = React.useState<'doughnut' | 'pie'>('doughnut');
+  const [expenseChartType, setExpenseChartType] = React.useState<'doughnut' | 'pie' | 'polar' | 'radar'>('doughnut');
   
   const monthlyData = getMonthlyData(transactions);
   const expenseCategories = getCategorySummary(transactions, 'expense');
@@ -141,9 +143,36 @@ export function Charts({ transactions }: ChartsProps) {
   };
 
   const renderExpenseChart = () => {
-    if (expenseChartType === 'pie') {
-      return <Pie data={expensePieData} options={pieOptions} />;
-    }
+    switch (expenseChartType) {
+      case 'pie':
+        return <Pie data={expensePieData} options={pieOptions} />;
+      case 'polar':
+        return <PolarArea data={expensePieData} options={pieOptions} />;
+      case 'radar':
+        const radarData = {
+          labels: expensePieData.labels,
+          datasets: [{
+            label: 'Expenses',
+            data: expensePieData.datasets[0].data,
+            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+            borderColor: 'rgba(59, 130, 246, 1)',
+            borderWidth: 2,
+            pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+          }]
+        };
+        return <Radar data={radarData} options={{
+          ...pieOptions,
+          scales: {
+            r: {
+              beginAtZero: true,
+              ticks: {
+                callback: (value: any) => formatCurrency(value),
+              },
+            },
+          },
+        }} />;
+      default:
+        return <Doughnut data={expensePieData} options={pieOptions} />;
     return <Doughnut data={expensePieData} options={pieOptions} />;
   };
   return (
@@ -183,10 +212,10 @@ export function Charts({ transactions }: ChartsProps) {
         <div className="bg-gradient-to-br from-white via-gray-50 to-white rounded-2xl shadow-2xl border border-gray-100 p-8 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">Expense Breakdown</h3>
-            <div className="flex gap-2">
+            <div className="flex gap-1 flex-wrap">
               <button
                 onClick={() => setExpenseChartType('doughnut')}
-                className={`px-3 py-1 text-xs font-medium rounded-lg transition-all duration-300 ${
+                className={`px-2 py-1 text-xs font-medium rounded-lg transition-all duration-300 ${
                   expenseChartType === 'doughnut'
                     ? 'bg-purple-500 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -196,13 +225,33 @@ export function Charts({ transactions }: ChartsProps) {
               </button>
               <button
                 onClick={() => setExpenseChartType('pie')}
-                className={`px-3 py-1 text-xs font-medium rounded-lg transition-all duration-300 ${
+                className={`px-2 py-1 text-xs font-medium rounded-lg transition-all duration-300 ${
                   expenseChartType === 'pie'
                     ? 'bg-purple-500 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
                 Pie
+              </button>
+              <button
+                onClick={() => setExpenseChartType('polar')}
+                className={`px-2 py-1 text-xs font-medium rounded-lg transition-all duration-300 ${
+                  expenseChartType === 'polar'
+                    ? 'bg-purple-500 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Polar
+              </button>
+              <button
+                onClick={() => setExpenseChartType('radar')}
+                className={`px-2 py-1 text-xs font-medium rounded-lg transition-all duration-300 ${
+                  expenseChartType === 'radar'
+                    ? 'bg-purple-500 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Radar
               </button>
             </div>
           </div>
