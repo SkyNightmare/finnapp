@@ -2,44 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  html {
-    @apply scroll-smooth;
-  }
-  
-  .dark {
-    color-scheme: dark;
-  }
-}
-
 @layer utilities {
   .shadow-3xl {
     box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
-  }
-  
-  .shadow-4xl {
-    box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.25);
-  }
-  
-  .text-shadow {
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  .backdrop-blur-xs {
-    backdrop-filter: blur(2px);
-  }
-}
-
-@layer components {
-  .btn-primary {
-    @apply bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 focus:ring-4 focus:ring-blue-200 transition-all duration-300 font-semibold shadow-xl transform hover:scale-105 active:scale-95;
-  }
-  
-  .card {
-    @apply bg-gradient-to-br from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 backdrop-blur-sm;
-  }
-  
-  .input-field {
-    @apply px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-300 bg-white dark:bg-gray-700 shadow-inner font-medium dark:text-white;
   }
 }

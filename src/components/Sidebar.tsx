@@ -1,26 +1,16 @@
 import React from 'react';
-import { BarChart3, Trophy, Plus, TrendingUp, Upload, Repeat, Bell, Bookmark, Building, Moon, Sun, Keyboard } from 'lucide-react';
-import { useTheme } from '../contexts/ThemeContext';
+import { BarChart3, Trophy, Plus } from 'lucide-react';
 
 interface SidebarProps {
-  activeTab: 'overview' | 'goals' | 'analytics' | 'import' | 'recurring' | 'bills' | 'templates' | 'networth';
-  onTabChange: (tab: 'overview' | 'goals' | 'analytics' | 'import' | 'recurring' | 'bills' | 'templates' | 'networth') => void;
+  activeTab: 'overview' | 'goals';
+  onTabChange: (tab: 'overview' | 'goals') => void;
   onAddTransaction: () => void;
 }
 
 export function Sidebar({ activeTab, onTabChange, onAddTransaction }: SidebarProps) {
-  const { theme, toggleTheme } = useTheme();
-  const [showShortcuts, setShowShortcuts] = useState(false);
-  
   const menuItems = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
-    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-    { id: 'goals', label: 'Goals', icon: Trophy },
-    { id: 'import', label: 'Import Data', icon: Upload },
-    { id: 'recurring', label: 'Recurring', icon: Repeat },
-    { id: 'bills', label: 'Bill Reminders', icon: Bell },
-    { id: 'templates', label: 'Templates', icon: Bookmark },
-    { id: 'networth', label: 'Net Worth', icon: Building }
+    { id: 'goals', label: 'Goals', icon: Trophy }
   ];
 
   return (
@@ -64,33 +54,7 @@ export function Sidebar({ activeTab, onTabChange, onAddTransaction }: SidebarPro
         </nav>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 dark:border-gray-700 space-y-3">
-        <div className="flex gap-2">
-          <button
-            onClick={toggleTheme}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-300 font-medium text-sm"
-          >
-            {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-            {theme === 'light' ? 'Dark' : 'Light'}
-          </button>
-          <button
-            onClick={() => setShowShortcuts(!showShortcuts)}
-            className="flex items-center justify-center px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-300"
-          >
-            <Keyboard className="w-4 h-4" />
-          </button>
-        </div>
-        
-        {showShortcuts && (
-          <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-xs space-y-1">
-            <div className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Keyboard Shortcuts</div>
-            <div className="flex justify-between"><span>Add Transaction</span><kbd className="bg-gray-200 dark:bg-gray-600 px-1 rounded">A</kbd></div>
-            <div className="flex justify-between"><span>Export Data</span><kbd className="bg-gray-200 dark:bg-gray-600 px-1 rounded">E</kbd></div>
-            <div className="flex justify-between"><span>Toggle Theme</span><kbd className="bg-gray-200 dark:bg-gray-600 px-1 rounded">T</kbd></div>
-            <div className="flex justify-between"><span>Undo</span><kbd className="bg-gray-200 dark:bg-gray-600 px-1 rounded">Ctrl+Z</kbd></div>
-          </div>
-        )}
-        
+      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100">
         <div className="text-center text-gray-500 text-xs">
           <p>Data stored locally</p>
           <p className="mt-1">Built with React & TypeScript</p>

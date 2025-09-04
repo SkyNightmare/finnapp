@@ -95,57 +95,8 @@ export function GoalTracker({ transactions }: GoalTrackerProps) {
     setGoals(prev => prev.filter(g => g.id !== id));
   };
 
-  const createGoalFromTemplate = (type: 'emergency' | 'vacation' | 'house' | 'car') => {
-    const templates = {
-      emergency: { name: 'Emergency Fund', targetAmount: 10000, category: 'Salary' },
-      vacation: { name: 'Dream Vacation', targetAmount: 5000, category: '' },
-      house: { name: 'House Down Payment', targetAmount: 50000, category: 'Salary' },
-      car: { name: 'New Car Fund', targetAmount: 25000, category: '' }
-    };
-    
-    const template = templates[type];
-    setFormData(prev => ({
-      ...prev,
-      name: template.name,
-      targetAmount: template.targetAmount.toString(),
-      category: template.category,
-      trackIncome: !!template.category
-    }));
-    setShowForm(true);
-  };
   return (
     <div className="space-y-8">
-      {/* Goal Templates */}
-      <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-indigo-900/20 rounded-2xl shadow-xl border border-purple-100 dark:border-purple-800 p-6 backdrop-blur-sm">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-            <Target className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">Quick Goal Templates</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Start with pre-configured savings goals</p>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          {[
-            { type: 'emergency', label: 'Emergency Fund', amount: '$10,000', icon: '🛡️' },
-            { type: 'vacation', label: 'Dream Vacation', amount: '$5,000', icon: '✈️' },
-            { type: 'house', label: 'House Down Payment', amount: '$50,000', icon: '🏠' },
-            { type: 'car', label: 'New Car Fund', amount: '$25,000', icon: '🚗' }
-          ].map(template => (
-            <button
-              key={template.type}
-              onClick={() => createGoalFromTemplate(template.type as any)}
-              className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 hover:border-purple-300 hover:shadow-lg transition-all duration-300 text-left group"
-            >
-              <div className="text-2xl mb-2">{template.icon}</div>
-              <p className="font-semibold text-gray-800 dark:text-gray-200 group-hover:text-purple-600">{template.label}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{template.amount}</p>
-            </button>
-          ))}
-        </div>
-      </div>
       {/* Quick Setup from Income Categories */}
       {incomeCategories.length > 0 && (
         <div className="bg-gradient-to-br from-yellow-50 via-orange-50 to-amber-50 rounded-2xl shadow-xl border border-yellow-100 p-6 backdrop-blur-sm">
@@ -405,11 +356,23 @@ export function GoalTracker({ transactions }: GoalTrackerProps) {
                   {!isCompleted && (
                     <div className="flex gap-2">
                       <button
+                        onClick={() => updateGoalProgress(goal.id, 50)}
+                        className="flex-1 px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-all duration-300 text-sm font-medium"
+                      >
+                        +$50
+                      </button>
+                      <button
+                        onClick={() => updateGoalProgress(goal.id, -50)}
+                        className="flex-1 px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-all duration-300 text-sm font-medium"
+                      >
+                        -$50
+                      </button>
+                      <button
                         onClick={() => setShowCustomInput(prev => ({ ...prev, [goal.id]: !prev[goal.id] }))}
-                        className="w-full px-3 py-2 bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/40 transition-all duration-300 text-sm font-medium flex items-center justify-center gap-1"
+                        className="flex-1 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all duration-300 text-sm font-medium flex items-center justify-center gap-1"
                       >
                         <Edit3 className="w-3 h-3" />
-                        Update Progress
+                        Custom
                       </button>
                     </div>
                   )}
@@ -422,7 +385,7 @@ export function GoalTracker({ transactions }: GoalTrackerProps) {
                         placeholder="Enter amount (+/-)"
                         value={customAmounts[goal.id] || ''}
                         onChange={(e) => setCustomAmounts(prev => ({ ...prev, [goal.id]: e.target.value }))}
-                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white dark:bg-gray-700 dark:text-white"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                         onKeyPress={(e) => e.key === 'Enter' && handleCustomAmountSubmit(goal.id)}
                       />
                       <button
